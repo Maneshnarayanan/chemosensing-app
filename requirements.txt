@@ -5,5 +5,6 @@ scikit-learn
 matplotlib
 opencv-python
 scipy
-streamlit
+streamlit>=1.35.0
+
 
