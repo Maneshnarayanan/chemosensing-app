@@ -1,11 +1,9 @@
-numpy
+numpy<2.0.0
 pandas
 scikit-image
 scikit-learn
 matplotlib
-opencv-python
+opencv-python-headless
 scipy
-streamlit>=1.35.0
-
-
+streamlit==1.40.0
 streamlit-drawable-canvas
