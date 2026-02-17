@@ -45,6 +45,9 @@ def get_color_parameters(rgb: np.ndarray, reference_rgb: np.ndarray = None) -> D
     
     if reference_rgb is not None:
         lab_ref = srgb_to_lab(reference_rgb)
+        results['dL*'] = lab[0] - lab_ref[0]
+        results['da*'] = lab[1] - lab_ref[1]
+        results['db*'] = lab[2] - lab_ref[2]
         results['delta_e'] = compute_delta_e_cie76(lab, lab_ref)
         
     return results
