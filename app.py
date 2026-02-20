@@ -134,16 +134,18 @@ if uploaded_file is not None:
                     # Match back to RGB data (assuming order hasn't changed, which it shouldn't in data_editor unless rows deleted)
                     # To be safe, we could use the index if user doesn't delete rows. 
                     # For simple impl, we assume 1:1 mapping by index.
-                    if idx < len(temp_results):
+                    if int(idx) < len(temp_results):
                         rgb = temp_results[idx]['RGB']
                         params = get_color_parameters(rgb, reference_rgb=blank_rgb)
                         params['name'] = row['Name']
+                        # Add RGB values formatted as string
+                        params['RGB'] = f"({rgb[0]:.1f}, {rgb[1]:.1f}, {rgb[2]:.1f})"
                         final_results.append(params)
                 
                 df = pd.DataFrame(final_results)
                 
                 # Reorder columns for better readability
-                cols = ['name', 'L*', 'a*', 'b*', 'dL*', 'da*', 'db*', 'delta_e']
+                cols = ['name', 'RGB', 'L*', 'a*', 'b*', 'dL*', 'da*', 'db*', 'delta_e']
                 # Keep only existing columns to avoid key errors if some aren't present
                 df = df[[c for c in cols if c in df.columns]]
                 
