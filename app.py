@@ -73,12 +73,48 @@ def render_roi_selector(
     stroke_width: int,
     canvas_key: str,
     helper_text: str,
+    selection_mode: str,
 ) -> tuple[np.ndarray | None, tuple[int, int, int, int] | None]:
     height, width, _ = image_rgb.shape
     display_width = min(width, MOBILE_CANVAS_WIDTH)
     scale_factor = display_width / width
     display_height = max(int(height * scale_factor), 1)
     display_image = cv2.resize(image_rgb, (display_width, display_height))
+
+    if selection_mode == "Preview + sliders":
+        center_x = st.slider(
+            "ROI Center X",
+            min_value=roi_size // 2,
+            max_value=max(width - roi_size // 2, roi_size // 2),
+            value=width // 2,
+            key=f"{canvas_key}_x",
+        )
+        center_y = st.slider(
+            "ROI Center Y",
+            min_value=roi_size // 2,
+            max_value=max(height - roi_size // 2, roi_size // 2),
+            value=height // 2,
+            key=f"{canvas_key}_y",
+        )
+
+        preview = image_rgb.copy()
+        x1 = max(center_x - roi_size // 2, 0)
+        y1 = max(center_y - roi_size // 2, 0)
+        x2 = min(center_x + roi_size // 2, width)
+        y2 = min(center_y + roi_size // 2, height)
+        cv2.rectangle(preview, (x1, y1), (x2, y2), (46, 139, 87), 3)
+
+        preview_display = cv2.resize(preview, (display_width, display_height))
+        st.caption(helper_text)
+        st.image(preview_display, caption="Move the sliders until the box covers the sensing area.")
+
+        roi_coords = (x1, y1, roi_size, roi_size)
+        rgb = extract_rgb_mean(image_rgb, roi_coords)
+        st.caption(
+            f"ROI center: ({center_x}, {center_y}) | Mean RGB: "
+            f"({rgb[0]:.1f}, {rgb[1]:.1f}, {rgb[2]:.1f})"
+        )
+        return rgb, roi_coords
 
     st.caption(helper_text)
     canvas_result = st_canvas(
@@ -148,6 +184,12 @@ with st.expander("Capture Guide", expanded=False):
 st.subheader("Settings")
 roi_size = st.slider("ROI Box Size", 20, 100, 40)
 stroke_width = st.slider("Marker Thickness", 1, 5, 2)
+selection_mode = st.radio(
+    "ROI Selection Mode",
+    options=["Preview + sliders", "Tap on canvas"],
+    index=0,
+    help="Use Preview + sliders on Streamlit Cloud if the canvas image appears blank.",
+)
 
 st.divider()
 st.subheader("1. Save Blank Reference")
@@ -162,6 +204,7 @@ if blank_file is not None:
             stroke_width=stroke_width,
             canvas_key="blank_canvas",
             helper_text="Tap once on the blank/reference spot.",
+            selection_mode=selection_mode,
         )
 
         if blank_rgb is not None:
@@ -229,6 +272,7 @@ else:
                 stroke_width=stroke_width,
                 canvas_key=f"sample_canvas_{st.session_state.sample_upload_nonce}",
                 helper_text="Tap once on the sample spot.",
+                selection_mode=selection_mode,
             )
 
             if sample_rgb is not None:
