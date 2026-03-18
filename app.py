@@ -1,3 +1,6 @@
+from pathlib import Path
+import sys
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,6 +8,11 @@ import pandas as pd
 import streamlit as st
 from PIL import Image
 from streamlit_drawable_canvas import st_canvas
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+SRC_PATH = PROJECT_ROOT / "src"
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
 
 from chemosense.color_science import get_color_parameters
 from chemosense.image_io import validate_image

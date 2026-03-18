@@ -1,11 +1,15 @@
 import os
 import sys
+from pathlib import Path
 import numpy as np
 import cv2
 import pandas as pd
 
 # Add src to path
-sys.path.append(os.path.abspath("src"))
+PROJECT_ROOT = Path(__file__).resolve().parent
+SRC_PATH = PROJECT_ROOT / "src"
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
 
 from chemosense.image_io import load_image
 from chemosense.roi_extraction import extract_rgb_mean
