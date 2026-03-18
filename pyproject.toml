@@ -7,7 +7,7 @@ name = "chemosense"
 version = "0.1.0"
 description = "Computer-assisted image-based chemosensing toolkit"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
