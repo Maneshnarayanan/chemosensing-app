@@ -8,3 +8,4 @@ scipy
 Pillow==10.4.0
 streamlit==1.35.0
 streamlit-drawable-canvas
+reportlab

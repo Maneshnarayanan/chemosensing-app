@@ -45,11 +45,48 @@ def test_quantification():
     assert np.allclose(pred, [1.0], atol=0.2)
     print("Quantification Test Passed!")
 
+from chemosense.reporting import generate_pdf_report, generate_html_report
+import matplotlib.pyplot as plt
+
+def test_reporting():
+    print("\nTesting Reporting Generation...")
+    df = pd.DataFrame([
+        {
+            "sample_name": "Sample 1",
+            "image_name": "test.png",
+            "R": 150.0,
+            "G": 100.0,
+            "B": 100.0,
+            "L*": 47.6,
+            "a*": 20.2,
+            "b*": 8.3,
+            "dL*": -33.0,
+            "da*": 20.2,
+            "db*": 8.3,
+            "delta_e": 39.5,
+            "concentration": 10.0,
+        }
+    ])
+    fig, ax = plt.subplots(figsize=(4, 2))
+    ax.bar(df["sample_name"], df["delta_e"])
+    blank_ref = {"rgb": [200.0, 200.0, 200.0], "roi": [10, 10, 40, 40]}
+
+    pdf_bytes = generate_pdf_report(df, blank_ref, fig)
+    assert len(pdf_bytes) > 1000
+    print(f"PDF Report generated: {len(pdf_bytes)} bytes")
+
+    html_str = generate_html_report(df, blank_ref, fig)
+    assert "<html" in html_str and "Sample 1" in html_str
+    print(f"HTML Report generated: {len(html_str)} chars")
+    print("Reporting Test Passed!")
+
 if __name__ == "__main__":
     try:
         test_color_conversion()
         test_quantification()
+        test_reporting()
         print("\nAll Core Tests Passed Successfully!")
     except Exception as e:
         print(f"\nTest Failed: {e}")
         sys.exit(1)
+

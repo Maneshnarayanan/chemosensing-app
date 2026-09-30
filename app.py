@@ -17,6 +17,7 @@ if str(SRC_PATH) not in sys.path:
 from chemosense.color_science import get_color_parameters
 from chemosense.image_io import validate_image
 from chemosense.roi_extraction import extract_rgb_mean
+from chemosense.reporting import generate_pdf_report, generate_html_report
 
 
 st.set_page_config(page_title="ChemoSense - Mobile Ready", layout="centered")
@@ -404,21 +405,80 @@ else:
         )
 
     fig_bar, ax_bar = plt.subplots(figsize=(6, 3.5))
-    ax_bar.bar(results_df["sample_name"], results_df["delta_e"], color="#2E8B57")
+    cmap = plt.cm.tab10
+    bar_colors = [cmap(i % 10) for i in range(len(results_df))]
+    bars = ax_bar.bar(
+        results_df["sample_name"],
+        results_df["delta_e"],
+        color=bar_colors,
+        edgecolor="#333333",
+        linewidth=0.8,
+        alpha=0.9,
+    )
     ax_bar.set_ylabel("Delta E")
     ax_bar.set_xlabel("Samples")
+
+    # Add numeric labels on top of each bar
+    max_val = float(results_df["delta_e"].max()) if not results_df.empty else 1.0
+    for bar in bars:
+        yval = bar.get_height()
+        ax_bar.text(
+            bar.get_x() + bar.get_width() / 2,
+            yval + max(max_val * 0.02, 0.2),
+            f"{yval:.2f}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+
+    ax_bar.set_ylim(0, max(max_val * 1.18, 1.0))
     plt.xticks(rotation=25, ha="right")
     plt.tight_layout()
     st.pyplot(fig_bar, use_container_width=True)
 
-    csv = results_df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Download CSV",
-        data=csv,
-        file_name="chemosense_session_results.csv",
-        mime="text/csv",
-        use_container_width=True,
+    st.markdown("#### Export Reports & Data")
+    download_col1, download_col2, download_col3 = st.columns(3)
+
+    pdf_data = generate_pdf_report(
+        results_df=results_df,
+        blank_ref=st.session_state.blank_reference,
+        chart_fig=fig_bar,
     )
+    with download_col1:
+        st.download_button(
+            label="📄 PDF Report",
+            data=pdf_data,
+            file_name="chemosense_analytical_report.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+            help="Download full formatted PDF report with embedded graph and data tables",
+        )
+
+    html_data = generate_html_report(
+        results_df=results_df,
+        blank_ref=st.session_state.blank_reference,
+        chart_fig=fig_bar,
+    )
+    with download_col2:
+        st.download_button(
+            label="🌐 HTML Report",
+            data=html_data,
+            file_name="chemosense_analytical_report.html",
+            mime="text/html",
+            use_container_width=True,
+            help="Download interactive/printable HTML report",
+        )
+
+    csv_data = results_df.to_csv(index=False).encode("utf-8")
+    with download_col3:
+        st.download_button(
+            label="📊 CSV Data",
+            data=csv_data,
+            file_name="chemosense_session_results.csv",
+            mime="text/csv",
+            use_container_width=True,
+            help="Download raw results table in CSV format",
+        )
 
 action_col1, action_col2 = st.columns(2)
 with action_col1:
