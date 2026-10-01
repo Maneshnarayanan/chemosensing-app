@@ -17,7 +17,12 @@ if str(SRC_PATH) not in sys.path:
 from chemosense.color_science import get_color_parameters
 from chemosense.image_io import validate_image
 from chemosense.roi_extraction import extract_rgb_mean
-from chemosense.reporting import generate_pdf_report, generate_html_report
+from chemosense.reporting import (
+    generate_pdf_report,
+    generate_html_report,
+    create_annotated_thumbnail,
+    create_spot_crop,
+)
 
 
 st.set_page_config(page_title="ChemoSense - Mobile Ready", layout="centered")
@@ -226,9 +231,15 @@ if blank_file is not None:
             )
 
             if st.button("Save Blank Reference", type="primary", use_container_width=True):
+                annotated_thumb = create_annotated_thumbnail(blank_image_rgb, blank_roi)
+                spot_thumb = create_spot_crop(blank_image_rgb, blank_roi)
                 st.session_state.blank_reference = {
+                    "image_name": getattr(blank_file, "name", "blank_capture.png"),
+                    "image_shape": list(blank_image_rgb.shape),
                     "rgb": blank_rgb.tolist(),
                     "roi": list(blank_roi),
+                    "annotated_thumb": annotated_thumb,
+                    "spot_thumb": spot_thumb,
                 }
                 st.success("Blank saved. You can add samples now.")
     except Exception as exc:
@@ -317,10 +328,13 @@ else:
                     )
 
                 if st.button("Add Sample", type="primary", use_container_width=True):
+                    annotated_thumb = create_annotated_thumbnail(sample_image_rgb, sample_roi)
+                    spot_thumb = create_spot_crop(sample_image_rgb, sample_roi)
                     st.session_state.sample_results.append(
                         {
                             "sample_name": sample_name,
-                            "image_name": sample_file.name,
+                            "image_name": getattr(sample_file, "name", f"sample_{len(st.session_state.sample_results) + 1}.png"),
+                            "image_shape": list(sample_image_rgb.shape),
                             "roi_x": int(sample_roi[0]),
                             "roi_y": int(sample_roi[1]),
                             "roi_w": int(sample_roi[2]),
@@ -336,6 +350,8 @@ else:
                             "db*": float(params["db*"]),
                             "delta_e": float(params["delta_e"]),
                             "concentration": float(sample_concentration) if concentration_provided else np.nan,
+                            "annotated_thumb": annotated_thumb,
+                            "spot_thumb": spot_thumb,
                         }
                     )
                     st.session_state.sample_upload_nonce += 1
